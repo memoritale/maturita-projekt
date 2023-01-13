@@ -111,7 +111,7 @@ void setup(){
          "<a href=/set?message=t>TURN OFF</a>" 
          );
         
-       //http://192.168.0.176
+       //http://192.168.0.172
 
     });
 
