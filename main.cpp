@@ -11,7 +11,7 @@
 // Set the name and password of the wifi to be connected.  配置所连接wifi的名称和密码
 
 const char *ssid = "LF";
-const char *password = "hesloksiti";
+const char *password = " ";
 
 #define NUM_LEDS 3
 
