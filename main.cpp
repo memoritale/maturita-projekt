@@ -13,7 +13,7 @@
 
 // Set the name and password of the wifi to be connected.  
 const char *ssid = "LF";
-const char *password = "hesloksiti";
+const char *password = " ";
 
 #define NUM_LEDS 3
 
