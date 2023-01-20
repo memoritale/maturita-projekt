@@ -5,13 +5,15 @@
 #include <ArduinoJson.h>
 
 
+
+
+
 //library doc: https://platformio.org/lib/show/6758/ESPAsyncWebServer-esphome
 
 
-// Set the name and password of the wifi to be connected.  配置所连接wifi的名称和密码
-
+// Set the name and password of the wifi to be connected.  
 const char *ssid = "LF";
-const char *password = " ";
+const char *password = "hesloksiti";
 
 #define NUM_LEDS 3
 
@@ -38,7 +40,7 @@ void notFound(AsyncWebServerRequest *request) {
 
 
 String message;
-//String localIP;
+String localIP;
 
 String barva;
 
@@ -52,16 +54,17 @@ void setup(){
   // Initialize the M5StickC object
   M5.begin();
   
-  M5.Lcd.setRotation(1);
-  M5.Lcd.setTextColor(BLUE);
-  M5.Lcd.setCursor(0,0);
-  M5.Lcd.setTextSize(2);
-  M5.Lcd.printf("Rover\n");
+    M5.Lcd.setRotation(1);
+ // M5.Lcd.setTextColor(BLUE);
+ // M5.Lcd.setCursor(0,0);
+ // M5.Lcd.setTextSize(2);
+  M5.Lcd.printf("\n");
 
-  int sum=0;
-  WiFiMulti.addAP(ssid, password);  //Add wifi configuration information.  添加wifi配置信息
-  M5.lcd.printf("Waiting connect to WiFi: %s \n",ssid); //Serial port output format string.  串口输出格式化字符串
-  while(WiFiMulti.run() != WL_CONNECTED) {  //If the connection to wifi is not established successfully.  如果没有与wifi成功建立连接
+
+   int sum=0;
+  WiFiMulti.addAP(ssid, password);  
+  M5.lcd.printf("Waiting connect to WiFi: %s \n",ssid); 
+  while(WiFiMulti.run() != WL_CONNECTED) { 
     M5.lcd.print(".");
     delay(1000);
     sum+=1;
@@ -78,8 +81,8 @@ void setup(){
 
   Serial.print("IP Address: ");
   Serial.println(localIP);
-  M5.lcd.print("IP address:\n");
-  M5.lcd.println(localIP); //The serial port outputs the IP address of the M5StickC.  串口输出M5StickC的IP地址
+  M5.lcd.qrcode(localIP,70,30,110,7);
+  M5.lcd.println(localIP);
   delay(500);
   
   
@@ -94,24 +97,21 @@ void setup(){
         if (request->hasParam(PARAM_MESSAGE)) {
             message = request->getParam(PARAM_MESSAGE)->value();
             Serial.println(message);
-            request->redirect("/");
         } else {
             message = "No message sent";
         }
-        request->send(200, "text/html", "Welcome:): " + message + "<br>" + \
+        request->send(200, "text/html", "Select required color: " + message + "<br>" + \
          "<a href=/set?message=r>RED</a><br><br>" + \
          "<a href=/set?message=o>ORANGE</a><br><br>" + \
          "<a href=/set?message=y>YELLOW</a><br><br>" + \
          "<a href=/set?message=g>GREEN</a><br><br>" + \
          "<a href=/set?message=b>BLUE</a><br><br>" + \
          "<a href=/set?message=p>PURPLE</a><br><br>" + \
-         "<a href=/set?message=c>RAINBOW</a><br><br>" + \
-         "<a href=/set?message=f>SEMAFOR</a><br><br>" + \
          "<a href=/set?message=w>WHITE</a><br><br>" + \
          "<a href=/set?message=t>TURN OFF</a>" 
          );
         
-       //http://192.168.0.172
+        //http://192.168.0.172
 
     });
 
@@ -125,7 +125,7 @@ void setup(){
 
         Serial.println(odpoved);
         
-        request->send(200, "application/json", odpoved);
+        request->send(200, "slider.html", odpoved);
     });
 
     // Send a POST request to <IP>/post with a form field message set to <message>
@@ -151,24 +151,30 @@ void loop() {
 
  if(message=="r")
   {
-  leds[2] = CRGB::Red;
-  FastLED.setBrightness(30);
+  leds[2].red   = 255;
+  leds[2].green = 0;
+  leds[2].blue  = 0;
+  FastLED.setBrightness(50);
   FastLED.show();
   barva = "red";
   message="";
 
   } else if(message=="y")
   {
-  leds[2] = CRGB::Yellow;
-  FastLED.setBrightness(30);
+  leds[2].red   = 255;
+  leds[2].green = 255;
+  leds[2].blue  = 0;
+  FastLED.setBrightness(50);
   FastLED.show();
   barva = "yellow";
   message="";
 
   } else if(message=="g")
   {
-  leds[2] = CRGB::Green;
-  FastLED.setBrightness(30);
+  leds[2].red   = 0;
+  leds[2].green = 255;
+  leds[2].blue  = 0;
+  FastLED.setBrightness(50);
   FastLED.show();
   barva = "green";
   message="";
@@ -176,113 +182,53 @@ void loop() {
    message="";
   } else if(message=="o")
   {
-   leds[2] = CRGB::Orange;
-   FastLED.setBrightness(30);
-   FastLED.show();
-   barva = "orange";
-   message="";
+  leds[2].red   = 255;
+  leds[2].green = 127;
+  leds[2].blue  = 0;
+  FastLED.setBrightness(50);
+  FastLED.show();
+  barva = "orange";
+  message="";
 
   } else if(message=="b")
   {
-  leds[2] = CRGB::Blue;
-  FastLED.setBrightness(30);
+  leds[2].red   = 0;
+  leds[2].green = 0;
+  leds[2].blue  = 255;
+  FastLED.setBrightness(50);
   FastLED.show();
   barva = "blue";
   message="";
 
   } else if(message=="p")
   {
-  leds[2] = CRGB::Purple;
-  FastLED.setBrightness(30);
+  leds[2].red   = 255;
+  leds[2].green = 0;
+  leds[2].blue  = 127;
+  FastLED.setBrightness(50);
   FastLED.show();
   barva = "purple";
   message="";
 
   } else if(message=="t")
   {
-  leds[2] = CRGB::Black;
-  FastLED.setBrightness(30);
+  leds[2].red   = 0;
+  leds[2].green = 0;
+  leds[2].blue  = 0;
+  FastLED.setBrightness(50);
   FastLED.show();
   barva = "off";
   message="";
  
   } else if(message=="w")
   {
-  leds[2] = CRGB::White;
-  FastLED.setBrightness(30);
+  leds[2].red   = 255;
+  leds[2].green = 255;
+  leds[2].blue  = 255;
+  FastLED.setBrightness(50);
   FastLED.show();
   barva = "white";
   message="";
-
-  } else if(message=="c")
-  {
-  leds[2] = CRGB::Red;
-  FastLED.setBrightness(30);
-  FastLED.show();
-  barva = "rainbow";
-  delay(1000);
-
-  leds[2] = CRGB::Orange;
-  FastLED.setBrightness(30);
-  FastLED.show();
-  delay(1000);
-
-  leds[2] = CRGB::Yellow;
-  FastLED.setBrightness(30);
-  FastLED.show();
-  delay(1000);
-
-  leds[2] = CRGB::Green;
-  FastLED.setBrightness(30);
-  FastLED.show();
-  delay(1000);
-
-  leds[2] = CRGB::Blue;
-  FastLED.setBrightness(30);
-  FastLED.show();
-  delay(1000);
-
-  leds[2] = CRGB::Purple;
-  FastLED.setBrightness(30);
-  FastLED.show();
-  delay(1000);
-
-  leds[2] = CRGB::Black;
-  FastLED.setBrightness(30);
-  FastLED.show();
-  delay(10);
-  
-
-  } else if(message=="f")
-  {
-  leds[2] = CRGB::Red;
-  FastLED.setBrightness(30);
-  FastLED.show();
-  barva = "semafor";
-  delay(1000);
-  leds[2] = CRGB::Black;
-  FastLED.setBrightness(30);
-  FastLED.show();
-  delay(10);
-
-  leds[1] = CRGB::Orange;
-  FastLED.setBrightness(30);
-  FastLED.show();
-  delay(500);
-  leds[1] = CRGB::Black;
-  FastLED.setBrightness(30);
-  FastLED.show();
-  delay(10);
-
-  leds[0] = CRGB::Green;
-  FastLED.setBrightness(30);
-  FastLED.show();
-  delay(1000);
-  leds[0] = CRGB::Black;
-  FastLED.setBrightness(30);
-  FastLED.show();
-  delay(10);
-
 
 
   } else if(message=="p")
@@ -293,5 +239,8 @@ void loop() {
   delay(100);
   
   }
+
+
+
 
 
