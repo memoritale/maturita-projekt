@@ -66,11 +66,6 @@ void setup(){
   Serial.begin(115200);
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
 
-  unsigned long startTime;
-  const unsigned long TIME = 10000; // in milliseconds
-
-  startTime = millis(); // start the timer
-  
 
   // Initialize the M5StickC object
   M5.begin();
@@ -195,27 +190,6 @@ void setup(){
 
 
 void loop() {
-
-  unsigned long elapsedTime = millis();
-  const unsigned long ON_TIME = 300000; // in milliseconds
-
-  
-  if (elapsedTime < ON_TIME) {
-    // turn on the LEDs
-    for (int i = 0; i < NUM_LEDS; i++) {
-      leds[i] = (0, 255, 0);  
-    }
-
-    FastLED.show();
-  }
-  else {
-    // turn off the LEDs
-    for (int i = 0; i < NUM_LEDS; i++) {
-      leds[i] = CRGB::Black;
-    }
-    FastLED.show();
-  }
-
     
  int step=50;
 
