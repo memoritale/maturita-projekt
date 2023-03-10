@@ -9,7 +9,6 @@
 
 
 
-
 //library doc: https://platformio.org/lib/show/6758/ESPAsyncWebServer-esphome
 
 
@@ -17,7 +16,8 @@
 const char *ssid = " ";
 const char *password = " ";
 
-#define NUM_LEDS 3 
+#define NUM_LEDS 35
+#define LED_PIN  6 
 
 
 
@@ -28,14 +28,19 @@ const char *password = " ";
 #define DATA_PIN 26
 #define CLOCK_PIN 13
 
+
 // Define the array of leds
 CRGB leds[NUM_LEDS];
 
-void setColorAll(int color){  
+
+
+void setColourAll(int colour){  
   for(int ledky = NUM_LEDS - 1; ledky >= 0; ledky--){
-    leds[ledky] = color;
+    leds[ledky] = colour;
   }
 }
+
+
 
 WiFiMulti WiFiMulti;
 
@@ -54,10 +59,18 @@ String barva;
 
 
 
+
 // the setup routine runs once when M5StickC starts up
 void setup(){ 
+    
   Serial.begin(115200);
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
+
+  unsigned long startTime;
+  const unsigned long TIME = 10000; // in milliseconds
+
+  startTime = millis(); // start the timer
+  
 
   // Initialize the M5StickC object
   M5.begin();
@@ -102,11 +115,11 @@ void setup(){
 
   
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-        request->send(200, "text/html", "Hello, world <a href=/set>Click to set colours</a><br><br>");
+        request->send(200, "text/html", "<a href=/set>Click to set colours</a><br><br>");
 
     });
 
-    // Send a GET request to <IP>/get?message=<message>
+    // Send a SET request to <IP>/set?message=<message>
     server.on("/set", HTTP_GET, [] (AsyncWebServerRequest *request) {
         Serial.println("SET:");
         if (request->hasParam(PARAM_MESSAGE)) {
@@ -115,44 +128,42 @@ void setup(){
         } else {
             message = "No message sent";
         }
-        request->send(200, "text/html", "Select required color: " + message + "<br>" + \
+        request->send(200, "text/html", "Select colour: " + message + "<br>" + \
          "<a href=/set?message=Red>Red</a><br><br>" + \
-         "<a href=/set?message=Green>Green</a><br><br>" + \  
+         "<a href=/set?message=Green>Green</a><br><br>" + \
          "<a href=/set?message=Blue>Blue</a><br><br>" + \
          "<a href=/set?message=Amethyst>Amethyst</a><br><br>" + \
-         "<a href=/set?message=Aqua>Aqua</a><br><br>" + \
-         "<a href=/set?message=Cyan>Cyan</a><br><br>" + \
+         "<a href=/set?message=Cyan>Cyan</a><br><br>" + \      
          "<a href=/set?message=FairyLight>Fairy Light</a><br><br>" + \
-         "<a href=/set?message=ForestGreen>Forest Green</a><br><br>" + \
-         "<a href=/set?message=Gold>Gold</a><br><br>" + \
-         "<a href=/set?message=LawnGreen>Lawn Green</a><br><br>" + \
-         "<a href=/set?message=Magenta>Magenta</a><br><br>" + \
-         "<a href=/set?message=MidnightBlue>Midnight Blue</a><br><br>" + \
+         "<a href=/set?message=ForestGreen>Forest Green</a><br><br>" + \ 
+         "<a href=/set?message=Gold>Gold</a><br><br>" +  \                  
+         "<a href=/set?message=Magenta>Magenta</a><br><br>" + \                                           
          "<a href=/set?message=Orange>Orange</a><br><br>" + \
-         "<a href=/set?message=Purple>Purple</a><br><br>" + \
-         "<a href=/set?message=RoyalBlue>Royal Blue</a><br><br>" + \
-         "<a href=/set?message=SeaGreen>Sea Green</a><br><br>" + \
-         "<a href=/set?message=Violet>Violet</a><br><br>" + \ 
+         "<a href=/set?message=Purple>Purple</a><br><br>" + \                  
+         "<a href=/set?message=RoyalBlue>Royal Blue</a><br><br>" + \         
+         "<a href=/set?message=Violet>Violet</a><br><br>" + \          
          "<a href=/set?message=White>White</a><br><br>" + \ 
-         "<a href=/set?message=Yellow>Yellow</a><br><br>" + \                            
+         "<a href=/set?message=Yellow>Yellow</a><br><br>" + \
          "<a href=/set?message=Off>Off</a>" 
-         );
+         
+        );
         
-        //http://192.168.0.172
-
+        
     });
-
+  
     server.on("/get", HTTP_GET, [] (AsyncWebServerRequest *request) {
         DynamicJsonDocument doc(1024);
-        doc["brightnes"] = FastLED.getBrightness();
-        doc["color"] = barva;
+        doc["brightness"] = FastLED.getBrightness();
+        doc["colour"] = barva;
+        //doc["timer"] = timer;
 
         String odpoved;
         serializeJson(doc, odpoved);
 
         Serial.println(odpoved);
         
-        //request->send(200, "/get", odpoved);
+        request->send(200, "serializeJson", odpoved);
+
     });
 
     // Send a POST request to <IP>/post with a form field message set to <message>
@@ -168,34 +179,60 @@ void setup(){
     server.onNotFound(notFound);
 
     server.begin();
- 
 
+
+  // Příjem hodnoty jasu přes sériovou komunikaci
+  if (Serial.available() > 0) {
+    int brightness = Serial.parseInt();
+
+    // Aktualizace hodnoty jasu LED pásky
+    FastLED.setBrightness(brightness);
+    FastLED.show();
+
+  }
 }
 
-// the loop routine runs over and over again forever
+
+
 void loop() {
+
+  unsigned long elapsedTime = millis();
+  const unsigned long ON_TIME = 300000; // in milliseconds
+
+  
+  if (elapsedTime < ON_TIME) {
+    // turn on the LEDs
+    for (int i = 0; i < NUM_LEDS; i++) {
+      leds[i] = (0, 255, 0);  
+    }
+
+    FastLED.show();
+  }
+  else {
+    // turn off the LEDs
+    for (int i = 0; i < NUM_LEDS; i++) {
+      leds[i] = CRGB::Black;
+    }
+    FastLED.show();
+  }
+
+    
  int step=50;
 
-  if(message=="Amethyst")
+
+
+ if(message=="Amethyst")
   {
-  setColorAll(0xCE55E0);
+  setColourAll(0xCE55E0);
+  FastLED.setBrightness(10);
   FastLED.setBrightness(50);
   FastLED.show();
   barva = "Amethyst";
   message="";
-
-
-  } else if(message=="Aqua")
-  {
-  setColorAll(0x00FFFF);
-  FastLED.setBrightness(50);
-  FastLED.show();
-  barva = "Aqua";
-  message="";
-
+ 
   } else if(message=="Blue")
   {
-  setColorAll(0x0000FF);
+  setColourAll(0x0000FF);
   FastLED.setBrightness(50);
   FastLED.show();
   barva = "Blue";
@@ -204,7 +241,7 @@ void loop() {
 
   } else if(message=="Cyan")
   {
-  setColorAll(0x00FFFF);
+  setColourAll(0x00FFFF);
   FastLED.setBrightness(50);
   FastLED.show();
   barva = "Cyan";
@@ -212,15 +249,15 @@ void loop() {
 
   } else if(message=="FairyLight")
   {
-  setColorAll(0xFFE42D);
+  setColourAll(0xFFE42D);
   FastLED.setBrightness(50);
   FastLED.show();
   barva = "Fairy Light";
   message="";
-
+ 
   } else if(message=="ForestGreen")
   {
-  setColorAll(0x113811);
+  setColourAll(0x113811);
   FastLED.setBrightness(50);
   FastLED.show();
   barva = "Forest Green";
@@ -228,7 +265,7 @@ void loop() {
 
   } else if(message=="Gold")
   {
-  setColorAll(0xFFD700);
+  setColourAll(0xFFC108);
   FastLED.setBrightness(50);
   FastLED.show();
   barva = "Gold";
@@ -236,40 +273,23 @@ void loop() {
 
   } else if(message=="Green")
   {
-  setColorAll(0x00FF00);
+  setColourAll(0x00FF00);
   FastLED.setBrightness(50);
   FastLED.show();
   barva = "Green";
   message="";
 
-  } else if(message=="LawnGreen")
-  {
-  setColorAll(0x7CFC00);
-  FastLED.setBrightness(50);
-  FastLED.show();
-  barva = "Lawn Green";
-  message="";
-
-
   } else if(message=="Magenta")
   {
-  setColorAll(0xFF00FF);
+  setColourAll(0xFF00FF);
   FastLED.setBrightness(50);
   FastLED.show();
   barva = "Magenta";
   message="";
 
-  } else if(message=="MidnightBlue")
-  {
-  setColorAll(0x191970);
-  FastLED.setBrightness(50);
-  FastLED.show();
-  barva = "Midnight Blue";
-  message="";
-
   } else if(message=="Orange")
   {
-  setColorAll(0xFFA500);
+  setColourAll(0xFF8708);
   FastLED.setBrightness(50);
   FastLED.show();
   barva = "Orange";
@@ -277,7 +297,7 @@ void loop() {
 
   } else if(message=="Purple")
   {
-  setColorAll(0x490b54);
+  setColourAll(0x490b54);
   FastLED.setBrightness(50);
   FastLED.show();
   barva = "Purple";
@@ -285,7 +305,7 @@ void loop() {
 
   } else if(message=="Red")
   {
-  setColorAll(0xFF0000);
+  setColourAll(0xFF0000);
   FastLED.setBrightness(50);
   FastLED.show();
   barva = "Red";
@@ -293,23 +313,15 @@ void loop() {
 
   } else if(message=="RoyalBlue")
   {
-  setColorAll(0x4169E1);
+  setColourAll(0x4169E1);
   FastLED.setBrightness(50);
   FastLED.show();
   barva = "Royal Blue";
   message="";
 
-  } else if(message=="SeaGreen")
-  {
-  setColorAll(0x2E8B57);
-  FastLED.setBrightness(50);
-  FastLED.show();
-  barva = "Sea Green";
-  message="";
-
   } else if(message=="Violet")
   {
-  setColorAll(0xEE82EE);
+  setColourAll(0xEE82EE);
   FastLED.setBrightness(50);
   FastLED.show();
   barva = "Violet";
@@ -317,7 +329,7 @@ void loop() {
 
   } else if(message=="White")
   {
-  setColorAll(0xFFFFFF);
+  setColourAll(0xFFFFFF);
   FastLED.setBrightness(50);
   FastLED.show();
   barva = "White";
@@ -325,7 +337,7 @@ void loop() {
 
   } else if(message=="Yellow")
   {
-  setColorAll(0xFFFF00);
+  setColourAll(0xFFFF00);
   FastLED.setBrightness(50);
   FastLED.show();
   barva = "Yellow";
@@ -333,8 +345,7 @@ void loop() {
 
   } else if(message=="Off")
   {
-  setColorAll(0x000000);
-  FastLED.setBrightness(50);
+  setColourAll(0x000000);
   FastLED.show();
   barva = "Off";
   message="";
@@ -344,10 +355,8 @@ void loop() {
    message="";
   }
   
-  delay(100);
+ 
+ delay(100);
   
-  }
-
-
-
+}
 
