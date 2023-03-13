@@ -33,6 +33,9 @@ const char *password = " ";
 CRGB leds[NUM_LEDS];
 
 
+unsigned long startTime;
+const unsigned long ON_TIME = 300000; // in milliseconds
+
 
 void setColourAll(int colour){  
   for(int ledky = NUM_LEDS - 1; ledky >= 0; ledky--){
@@ -65,6 +68,11 @@ void setup(){
     
   Serial.begin(115200);
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
+    FastLED.setBrightness(50);
+  
+  startTime = millis(); // start the timer
+
+
 
 
   // Initialize the M5StickC object
@@ -190,6 +198,26 @@ void setup(){
 
 
 void loop() {
+
+  unsigned long elapsedTime = millis() - startTime;
+  unsigned long startTime;
+  const unsigned long ON_TIME = 300000; // in milliseconds
+  
+  if (elapsedTime < ON_TIME) {
+    // turn on the LEDs
+    for (int i = 0; i < NUM_LEDS; i++) {
+      leds[i] = setColourAll; // set the color to green
+    }
+    FastLED.show();
+  }
+  else {
+    // turn off the LEDs
+    for (int i = 0; i < NUM_LEDS; i++) {
+      leds[i] = CRGB::Black;
+    }
+    FastLED.show();
+  }
+
     
  int step=50;
 
@@ -198,7 +226,6 @@ void loop() {
  if(message=="Amethyst")
   {
   setColourAll(0xCE55E0);
-  FastLED.setBrightness(10);
   FastLED.setBrightness(50);
   FastLED.show();
   barva = "Amethyst";
