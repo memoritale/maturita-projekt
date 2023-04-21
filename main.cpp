@@ -33,8 +33,6 @@ const char *password = " ";
 CRGB leds[NUM_LEDS];
 
 
-unsigned long startTime;
-const unsigned long ON_TIME = 300000; // in milliseconds
 
 
 void setColourAll(int colour){  
@@ -57,9 +55,7 @@ void notFound(AsyncWebServerRequest *request) {
 
 String message;
 String localIP;
-
 String barva;
-
 
 
 
@@ -69,8 +65,6 @@ void setup(){
   Serial.begin(115200);
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
     FastLED.setBrightness(50);
-  
-  startTime = millis(); // start the timer
 
 
 
@@ -130,30 +124,93 @@ void setup(){
             Serial.println(message);
         } else {
             message = "No message sent";
+
+             int r = 0, g = 0, b = 0, brightness = 0;
+        if (request->hasParam("red")) {
+          r = request->getParam("red")->value().toInt();
+          // Set red value
         }
-        request->send(200, "text/html", "Select colour: " + message + "<br>" + \
-         "<a href=/set?message=Red>Red</a><br><br>" + \
-         "<a href=/set?message=Green>Green</a><br><br>" + \
-         "<a href=/set?message=Blue>Blue</a><br><br>" + \
-         "<a href=/set?message=Amethyst>Amethyst</a><br><br>" + \
-         "<a href=/set?message=Cyan>Cyan</a><br><br>" + \      
-         "<a href=/set?message=FairyLight>Fairy Light</a><br><br>" + \
-         "<a href=/set?message=ForestGreen>Forest Green</a><br><br>" + \ 
-         "<a href=/set?message=Gold>Gold</a><br><br>" +  \                  
-         "<a href=/set?message=Magenta>Magenta</a><br><br>" + \                                           
-         "<a href=/set?message=Orange>Orange</a><br><br>" + \
-         "<a href=/set?message=Purple>Purple</a><br><br>" + \                  
-         "<a href=/set?message=RoyalBlue>Royal Blue</a><br><br>" + \         
-         "<a href=/set?message=Violet>Violet</a><br><br>" + \          
-         "<a href=/set?message=White>White</a><br><br>" + \ 
-         "<a href=/set?message=Yellow>Yellow</a><br><br>" + \
-         "<a href=/set?message=Off>Off</a>" 
+
+        if (request->hasParam("green")) {
+          g = request->getParam("green")->value().toInt();
+          // Set green value
+        }
+
+        if (request->hasParam("blue")) {
+          b = request->getParam("blue")->value().toInt();
+          // Set blue value
+        }
+
+        if (request->hasParam("brightness")) {
+          brightness = request->getParam("brightness")->value().toInt();
+          // Set brightness value
+        }
+
+  // Set color and brightness
+  FastLED.setBrightness(brightness);
+  fill_solid(leds, NUM_LEDS, CRGB(r, g, b));
+  FastLED.show();
+
+        }
+        request->send(200, 
+        "text/html",
+
+         "Select colour: " + message + "<br>" + \
+         "<!DOCTYPE html>" + \
+          "<html>" + \
+          "<head>" + \
+          "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">" + \
+          "<style>" + \
+
+          "</style>" + \
+          "<link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css\" rel=\"stylesheet\" integrity=\"sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD\" crossorigin=\"anonymous\">" + \
+          "</head>" + \
+          "<body>" + \
+            "<div class=\"container-fluid\">" + \
+              "<form>" + \
+                "<label for=\"RED\" class=\"form-label\">Red</label>" + \
+                "<input type=\"range\" class=\"form-range\" min=\"0\" max=\"255\" id=\"RED\" name=\"red\">" + \
+
+                "<label for=\"GREEN\" class=\"form-label\">Green</label>" + \
+                "<input type=\"range\" class=\"form-range\" min=\"0\" max=\"255\" id=\"GREEN\" name=\"green\">" + \
+
+                "<label for=\"BLUE\" class=\"form-label\">Blue</label>" + \
+                "<input type=\"range\" class=\"form-range\" min=\"0\" max=\"255\" id=\"BLUE\" name=\"blue\">" + \
+
+                "<label for=\"BRIGHTNESS\" class=\"form-label\">Brightness</label>" + \
+                "<input type=\"range\" class=\"form-range\" min=\"0\" max=\"255\" id=\"BRIGHTNESS\" name=\"brightness\">" +\
+
+                "<button type=\"submit\" class=\"btn btn-primary\">Submit</button>" + \
+              "</form>" + \
+            "</div>" + \
+          "<script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js\" integrity=\"sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN\" crossorigin=\"anonymous\"></script>" + \
+          "</body>" + \
+          "</html>"
          
         );
         
+      if (request->hasParam("red")) {
+        int r = request->getParam("red")->value().toInt();
+        // Set red value
+      }
+
+      if (request->hasParam("green")) {
+        int g = request->getParam("green")->value().toInt();
+        // Set green value
+      }
+
+      if (request->hasParam("blue")) {
+        int b = request->getParam("blue")->value().toInt();
+        // Set blue value
+      }
+
+      if (request->hasParam("brightness")) {
+        int brightness = request->getParam("brightness")->value().toInt();
+        // Set brightness value
+      }
+                
+            });
         
-    });
-  
     server.on("/get", HTTP_GET, [] (AsyncWebServerRequest *request) {
         DynamicJsonDocument doc(1024);
         doc["brightness"] = FastLED.getBrightness();
@@ -183,181 +240,15 @@ void setup(){
 
     server.begin();
 
-
-  // Příjem hodnoty jasu přes sériovou komunikaci
-  if (Serial.available() > 0) {
-    int brightness = Serial.parseInt();
-
-    // Aktualizace hodnoty jasu LED pásky
-    FastLED.setBrightness(brightness);
-    FastLED.show();
-
-  }
 }
 
 
-
-void loop() {
-
-  unsigned long elapsedTime = millis() - startTime;
-  unsigned long startTime;
-  const unsigned long ON_TIME = 300000; // in milliseconds
-  
-  if (elapsedTime < ON_TIME) {
-    // turn on the LEDs
-    for (int i = 0; i < NUM_LEDS; i++) {
-      leds[i] = setColourAll; // set the color to green
-    }
-    FastLED.show();
-  }
-  else {
-    // turn off the LEDs
-    for (int i = 0; i < NUM_LEDS; i++) {
-      leds[i] = CRGB::Black;
-    }
-    FastLED.show();
-  }
-
-    
+void loop(){
  int step=50;
 
 
 
- if(message=="Amethyst")
-  {
-  setColourAll(0xCE55E0);
-  FastLED.setBrightness(50);
-  FastLED.show();
-  barva = "Amethyst";
-  message="";
- 
-  } else if(message=="Blue")
-  {
-  setColourAll(0x0000FF);
-  FastLED.setBrightness(50);
-  FastLED.show();
-  barva = "Blue";
-  message="";
-
-
-  } else if(message=="Cyan")
-  {
-  setColourAll(0x00FFFF);
-  FastLED.setBrightness(50);
-  FastLED.show();
-  barva = "Cyan";
-  message="";
-
-  } else if(message=="FairyLight")
-  {
-  setColourAll(0xFFE42D);
-  FastLED.setBrightness(50);
-  FastLED.show();
-  barva = "Fairy Light";
-  message="";
- 
-  } else if(message=="ForestGreen")
-  {
-  setColourAll(0x113811);
-  FastLED.setBrightness(50);
-  FastLED.show();
-  barva = "Forest Green";
-  message="";
-
-  } else if(message=="Gold")
-  {
-  setColourAll(0xFFC108);
-  FastLED.setBrightness(50);
-  FastLED.show();
-  barva = "Gold";
-  message="";
-
-  } else if(message=="Green")
-  {
-  setColourAll(0x00FF00);
-  FastLED.setBrightness(50);
-  FastLED.show();
-  barva = "Green";
-  message="";
-
-  } else if(message=="Magenta")
-  {
-  setColourAll(0xFF00FF);
-  FastLED.setBrightness(50);
-  FastLED.show();
-  barva = "Magenta";
-  message="";
-
-  } else if(message=="Orange")
-  {
-  setColourAll(0xFF8708);
-  FastLED.setBrightness(50);
-  FastLED.show();
-  barva = "Orange";
-  message="";
-
-  } else if(message=="Purple")
-  {
-  setColourAll(0x490b54);
-  FastLED.setBrightness(50);
-  FastLED.show();
-  barva = "Purple";
-  message="";
-
-  } else if(message=="Red")
-  {
-  setColourAll(0xFF0000);
-  FastLED.setBrightness(50);
-  FastLED.show();
-  barva = "Red";
-  message="";
-
-  } else if(message=="RoyalBlue")
-  {
-  setColourAll(0x4169E1);
-  FastLED.setBrightness(50);
-  FastLED.show();
-  barva = "Royal Blue";
-  message="";
-
-  } else if(message=="Violet")
-  {
-  setColourAll(0xEE82EE);
-  FastLED.setBrightness(50);
-  FastLED.show();
-  barva = "Violet";
-  message="";
-
-  } else if(message=="White")
-  {
-  setColourAll(0xFFFFFF);
-  FastLED.setBrightness(50);
-  FastLED.show();
-  barva = "White";
-  message="";
-
-  } else if(message=="Yellow")
-  {
-  setColourAll(0xFFFF00);
-  FastLED.setBrightness(50);
-  FastLED.show();
-  barva = "Yellow";
-  message="";
-
-  } else if(message=="Off")
-  {
-  setColourAll(0x000000);
-  FastLED.show();
-  barva = "Off";
-  message="";
-
-  } else if(message=="p")
-  {
-   message="";
-  }
-  
- 
  delay(100);
-  
 }
+
 
