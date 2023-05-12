@@ -13,8 +13,8 @@
 
 
 // Set the name and password of the wifi to be connected.  
-const char *ssid = " ";
-const char *password = " ";
+const char *ssid = "ssid";
+const char *password = "password";
 
 #define NUM_LEDS 35
 #define LED_PIN  6 
@@ -33,13 +33,15 @@ const char *password = " ";
 CRGB leds[NUM_LEDS];
 
 
-
+unsigned long ledStartTime = 0;
 
 void setColourAll(int colour){  
   for(int ledky = NUM_LEDS - 1; ledky >= 0; ledky--){
     leds[ledky] = colour;
   }
 }
+
+
 
 
 
@@ -59,12 +61,14 @@ String barva;
 
 
 
+
+
 // the setup routine runs once when M5StickC starts up
 void setup(){ 
-    
+   
   Serial.begin(115200);
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
-    FastLED.setBrightness(50);
+  ledStartTime = millis();
 
 
 
@@ -150,6 +154,7 @@ void setup(){
   FastLED.setBrightness(brightness);
   fill_solid(leds, NUM_LEDS, CRGB(r, g, b));
   FastLED.show();
+
 
         }
         request->send(200, 
@@ -240,11 +245,23 @@ void setup(){
 
     server.begin();
 
+
+    
+
 }
+
+
 
 
 void loop(){
  int step=50;
+ //...
+  unsigned long elapsedTime = millis() - ledStartTime;
+  if (elapsedTime >= 60000) { // 5 seconds have elapsed
+    fill_solid(leds, NUM_LEDS, CRGB::Black); // Turn off LED stripe
+    FastLED.show();
+  }
+  //...
 
 
 
